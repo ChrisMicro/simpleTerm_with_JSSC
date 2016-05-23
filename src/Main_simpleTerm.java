@@ -5,6 +5,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 
 import jssc.SerialPort;
 import jssc.SerialPortEvent;
@@ -118,35 +119,47 @@ public class Main_simpleTerm
 		{
 			this.outputTextBereich=outputTextBereich;
 		}
-	  
-	  //SwingUtilities.invokeLater()
-	  //{
-		    public void serialEvent(SerialPortEvent event) 
-		    {
-		        if (event.isRXCHAR()) 
-		        {
-		          int numberOfBytes=event.getEventValue();
-		            if (numberOfBytes > 1) 
-		            {
-		                try 
-		                {
-					        byte buffer[] = serialPort.readBytes(numberOfBytes);
-					        int n;
-					        String rxString="";
-					        for(n=0;n<buffer.length;n++) rxString+=((char)(buffer[n]));
-	
-					        System.out.println(rxString);
-					        if(outputTextBereich.getLineCount()>NumberOfLinesUntilTextCleared)outputTextBereich.setText(""); // clear panel
-					        outputTextBereich.append(rxString);
-		                } catch (SerialPortException ex) 
-		                {
-		                    System.out.println(ex);
-		                }
-		            }
-		        } 
-		    }
+		
+		private void outputText(final String rx)
+		{
+		    SwingUtilities.invokeLater(
+		    		new Runnable() 
+		    		{
+		    			@Override
+		    			public void run() 
+		    			{
+		    				outputTextBereich.append(rx);
+		    				if(outputTextBereich.getLineCount()>NumberOfLinesUntilTextCleared)outputTextBereich.setText(""); // clear panel
+		    			}
+		    		}
+		    	);
+		}
+
+	    public void serialEvent(SerialPortEvent event) 
+	    {
+	        if (event.isRXCHAR()) 
+	        {
+	          int numberOfBytes=event.getEventValue();
+	            if (numberOfBytes > 1) 
+	            {
+	                try 
+	                {
+				        byte buffer[] = serialPort.readBytes(numberOfBytes);
+				        int n;
+				        String rxString="";
+				        for(n=0;n<buffer.length;n++) rxString+=((char)(buffer[n]));
+
+				        System.out.println(rxString);
+				        outputText(rxString);
+	                } catch (SerialPortException ex) 
+	                {
+	                    System.out.println(ex);
+	                }
+	            }
+	        } 
+	    }
 	}
-	//}
+
     
 	public static void main(String[] args) 
 	{
