@@ -2,6 +2,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -104,6 +105,13 @@ public class Main_simpleTerm
 		    TextBereich.append(portNames[i]+"\n\r");
 		}
 		TextBereich.append("\n\r");
+	    portName = (String) JOptionPane.showInputDialog( null,
+	              "Port",
+	              "Comport w�hlen",
+	              JOptionPane.QUESTION_MESSAGE,
+	              null, portNames,
+	              portNames[1] );
+		
 		//***********************************************************************************
 	
 		openSerialConnection();
