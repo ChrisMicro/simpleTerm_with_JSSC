@@ -21,6 +21,7 @@ public class Main_simpleTerm
 	JFrame fenster;
 	int textDimension_x=80;
 	int textDimension_y=40;
+	boolean SerialPortOpenedFlag=false;
 
 	JTextArea TextBereich;
     
@@ -45,6 +46,7 @@ public class Main_simpleTerm
 		    int mask = SerialPort.MASK_RXCHAR;//Prepare mask
 		    serialPort.setEventsMask(mask);//Set mask
 		    serialPort.addEventListener(new SerialPortReader(TextBereich));//Add SerialPortEventListener
+		    SerialPortOpenedFlag=true;
 		   
 		} catch (SerialPortException ex) 
 		{
@@ -57,7 +59,12 @@ public class Main_simpleTerm
 	{
 		try 
 		{
-			serialPort.closePort();
+			if(SerialPortOpenedFlag)
+			{
+				serialPort.closePort();		
+			    SerialPortOpenedFlag=false;
+			}
+
 		} catch (SerialPortException e) 
 		{
 			System.out.println("closePort error");
@@ -75,7 +82,7 @@ public class Main_simpleTerm
 			      public void windowClosing(WindowEvent e) 
 			      {
 			        closeSerialConnection();
-			          System.exit(0);        
+			        System.exit(0);        
 			      }        
 			}
 		);
@@ -96,8 +103,8 @@ public class Main_simpleTerm
 	      
 		//************************ show serial ports ****************************************
 		TextBereich.append("serial port available on this system:\n\r");
-		  
-		String[] portNames = SerialPortList.getPortNames();
+		
+		String[] portNames  = SerialPortList.getPortNames();
 		
 		for(int i = 0; i < portNames.length; i++)
 		{
@@ -105,16 +112,26 @@ public class Main_simpleTerm
 		    TextBereich.append(portNames[i]+"\n\r");
 		}
 		TextBereich.append("\n\r");
-	    portName = (String) JOptionPane.showInputDialog( null,
-	              "Port",
-	              "Comport w�hlen",
-	              JOptionPane.QUESTION_MESSAGE,
-	              null, portNames,
-	              portNames[1] );
-		
 		//***********************************************************************************
-	
-		openSerialConnection();
+		
+		if(portNames.length>0)
+		{
+		    portName = (String) JOptionPane.showInputDialog( null,
+		              "Port",
+		              "choose port",
+		              JOptionPane.QUESTION_MESSAGE,
+		              null, portNames,
+		              portNames[0]);
+		    
+		    if(portName!=null)	
+		    {
+		    	openSerialConnection();
+  
+		    }else TextBereich.append("no ports found, please exit\n\r");
+		}else
+		{
+			TextBereich.append("no ports found, exit\n\r");
+		}
 	
 	}
   
