@@ -4,29 +4,29 @@ import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
-import jssc.SerialPort;
-import jssc.SerialPortEvent;
-import jssc.SerialPortEventListener;
-import jssc.SerialPortException;
+
+import serial.SerialPortWrapper;
+import serial.SerialPortWrapperEvent;
+import serial.SerialPortWrapperEventListener;
+
 import jssc.SerialPortList;
+
 
 public class Main_simpleTerm implements KeyListener
 {
-	String portName = "/dev/ttyACM0";
-  
 	JFrame fenster;
 	int textDimension_x=60;
 	int textDimension_y=25;
-	boolean SerialPortOpenedFlag=false;
+
 
 	JTextArea TextBereich;
 
-	static SerialPort serialPort;
+	SerialPortWrapper serial;
+
   	    
 	public Main_simpleTerm()
 	{
@@ -37,7 +37,7 @@ public class Main_simpleTerm implements KeyListener
 			{
 			      public void windowClosing(WindowEvent e) 
 			      {
-			        closeSerialConnection();
+			    	serial.close();
 			        System.exit(0);        
 			      }        
 			}
@@ -74,6 +74,10 @@ public class Main_simpleTerm implements KeyListener
 		*/  
 		fenster.pack();
 		fenster.setVisible(true);
+		
+		//***********************************************************************************
+		
+		serial=new SerialPortWrapper();
 	      
 		//************************ show serial ports ****************************************
 		TextBereich.append("serial port available on this system:\n\r");
@@ -82,135 +86,51 @@ public class Main_simpleTerm implements KeyListener
 		
 		for(int i = 0; i < portNames.length; i++)
 		{
-		    System.out.println(portNames[i]);
+		    //System.out.println(portNames[i]);
 		    TextBereich.append(portNames[i]+"\n\r");
 		}
-		TextBereich.append("\n\r");
-		//***********************************************************************************
 		
-		if(portNames.length>0)
-		{
-		    portName = (String) JOptionPane.showInputDialog( null,
-		              "Port",
-		              "choose port",
-		              JOptionPane.QUESTION_MESSAGE,
-		              null, portNames,
-		              portNames[0]);
-		    
-		    if(portName!=null)	
-		    {
-		    	openSerialConnection();
-  
-		    }else TextBereich.append("no ports found, please exit\n\r");
-		}else
-		{
-			TextBereich.append("no ports found, exit\n\r");
-		}
+		TextBereich.append("\n\r");
+		
+		serial.addEventListener(new SerialCallBack(TextBereich));
+		serial.open();
+
 	
 	}
 
-	public void openSerialConnection()
-	{
-		TextBereich.append("trying to open port\n\r");
-		TextBereich.append(portName+"\n\r");
-		    
-		serialPort = new SerialPort(portName);
-		try 
-		{
-		  
-		    System.out.println("port open :" + serialPort.openPort());//Open port
-		    serialPort.setParams(SerialPort.BAUDRATE_115200,
-		            SerialPort.DATABITS_8,
-		            SerialPort.STOPBITS_1,
-		            SerialPort.PARITY_NONE);
-		    
-		    // clear rx data
-		    serialPort.purgePort(SerialPort.PURGE_RXCLEAR);
-
-		    
-		    TextBereich.append("BAUDRATE_115200\n\r");
-			TextBereich.append("\n\r");
-		    
-		    int mask = SerialPort.MASK_RXCHAR;//Prepare mask
-		    serialPort.setEventsMask(mask);//Set mask
-		    serialPort.addEventListener(new SerialPortReader(TextBereich));//Add SerialPortEventListener
-		    SerialPortOpenedFlag=true;
-		   
-		} catch (SerialPortException ex) 
-		{
-		    TextBereich.append("port error");
-		    System.out.println(ex);
-		}
-	 }
-    
-	public void closeSerialConnection()
-	{
-		try 
-		{
-			if(SerialPortOpenedFlag)
-			{
-				serialPort.closePort();		
-			    SerialPortOpenedFlag=false;
-			}
-
-		} catch (SerialPortException e) 
-		{
-			System.out.println("closePort error");
-			e.printStackTrace();
-		}
-	}
-
-
-	static class SerialPortReader implements SerialPortEventListener
+	static class SerialCallBack implements SerialPortWrapperEventListener
 	{
 		int NumberOfLinesUntilTextCleared=25;
 		JTextArea outputTextBereich;
-
-		public SerialPortReader(JTextArea outputTextBereich)
+		
+		public SerialCallBack(JTextArea outputTextBereich)
 		{
 			this.outputTextBereich=outputTextBereich;
 		}
 		
 		private void outputText(final String rx)
 		{
-		    SwingUtilities.invokeLater(
-		    		new Runnable() 
-		    		{
-		    			@Override
-		    			public void run() 
-		    			{
-		    				outputTextBereich.append(rx);
-		    				if(outputTextBereich.getLineCount()>NumberOfLinesUntilTextCleared)outputTextBereich.setText(""); // clear panel
-		    			}
-		    		}
-		    	);
+			SwingUtilities.invokeLater
+			(
+					new Runnable() 
+					{
+						@Override
+						public void run() 
+						{
+							outputTextBereich.append(rx);
+							if(outputTextBereich.getLineCount()>NumberOfLinesUntilTextCleared)outputTextBereich.setText(""); // clear panel
+					}
+				}
+			);
 		}
-
-	    public void serialEvent(SerialPortEvent event) 
-	    {
-	        if (event.isRXCHAR()) 
-	        {
-	          int numberOfBytes=event.getEventValue();
-	            if (numberOfBytes > 0) 
-	            {
-	                try 
-	                {
-				        byte buffer[] = serialPort.readBytes(numberOfBytes);
-				        int n;
-				        String rxString="";
-				        for(n=0;n<buffer.length;n++) rxString+=((char)(buffer[n]));
-
-				        System.out.println(rxString);
-				        outputText(rxString);
-	                } catch (SerialPortException ex) 
-	                {
-	                    System.out.println(ex);
-	                }
-	            }
-	        } 
-	    }
+		
+		public void serialEvent(SerialPortWrapperEvent event)
+		{
+			outputText(event.getString());
+		}
 	}
-
+	
+	/*********************+ handle keyboard events *******************************/
 	@Override
     public void keyTyped(KeyEvent e) {}
 	
@@ -219,14 +139,9 @@ public class Main_simpleTerm implements KeyListener
     {
         System.out.println("Taste: " + e.getKeyChar() + ", Code: " + e.getKeyCode()); 
 
-        try 
-        {
-        	char c = e.getKeyChar();
-        	if(SerialPortOpenedFlag && e.getKeyCode()!=16)    	serialPort.writeString(""+c);
-		} catch (SerialPortException e1) 
-		{
-			e1.printStackTrace();
-		}
+		char c = e.getKeyChar();
+		if(e.getKeyCode()!=16) serial.write(c);
+
     }
     
 	@Override
@@ -235,6 +150,7 @@ public class Main_simpleTerm implements KeyListener
 		
 	}
 	
+	/************************** main ********************************************/
 	public static void main(String[] args) 
 	{
 		new Main_simpleTerm();
