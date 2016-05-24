@@ -8,6 +8,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
+import javax.swing.text.JTextComponent;
 
 import serial.SerialPortWrapper;
 import serial.SerialPortWrapperEvent;
@@ -27,7 +28,7 @@ public class Main_simpleTerm implements KeyListener
 
 	SerialPortWrapper serial;
 
-  	    
+
 	public Main_simpleTerm()
 	{
 		fenster=new JFrame("java serial terminal");
@@ -58,19 +59,20 @@ public class Main_simpleTerm implements KeyListener
 		lowerPanel.add(new JScrollPane(TextBereich));
 		
 		TextBereich.addKeyListener(this);
+		TextBereich.getCaret().setBlinkRate(1000);
 		
 		/*// cursor 
-        Caret caret = new DefaultCaret()
-        {
-            public void focusGained(FocusEvent e)
-            {
-                setVisible(true);
-                setSelectionVisible(true);
-            }
-        };
-        caret.setVisible(true);        
-        caret.setBlinkRate( UIManager.getInt("TextField.caretBlinkRate") );
-        TextBereich.setCaret(caret);
+		Caret caret = new DefaultCaret()
+		{
+		    public void focusGained(FocusEvent e)
+		    {
+		        setVisible(true);
+		        setSelectionVisible(true);
+		    }
+		};
+		caret.setVisible(true);        
+		caret.setBlinkRate( UIManager.getInt("TextField.caretBlinkRate") );
+		TextBereich.setCaret(caret);
 		*/  
 		fenster.pack();
 		fenster.setVisible(true);
@@ -95,6 +97,20 @@ public class Main_simpleTerm implements KeyListener
 		serial.addEventListener(new SerialCallBack(TextBereich));
 		serial.open();
 
+		/* ping echo test
+	    try 
+	    {
+	        Thread.sleep(2000);           
+	    } catch(InterruptedException ex) 
+	    {
+	        Thread.currentThread().interrupt();
+	    }
+	    
+	    for(int n=0;n<1000;n++)
+	    {
+	    	TextBereich.append(""+(char)serial.ping(n+65));
+	    }
+		 */
 	
 	}
 
@@ -110,7 +126,7 @@ public class Main_simpleTerm implements KeyListener
 		
 		private void outputText(final String rx)
 		{
-			SwingUtilities.invokeLater
+			SwingUtilities.invokeLater // prevent race condition due to slow UI
 			(
 					new Runnable() 
 					{
@@ -145,10 +161,7 @@ public class Main_simpleTerm implements KeyListener
     }
     
 	@Override
-	public void keyReleased(KeyEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void keyReleased(KeyEvent arg0) {}
 	
 	/************************** main ********************************************/
 	public static void main(String[] args) 

@@ -28,11 +28,18 @@ public class SerialPortWrapper
 	String portName = "/dev/ttyACM0";
 	
 	static SerialPort serialPort;
+	SerialPortReader serPortReader;
 	
 	boolean SerialPortOpenedFlag=false;
+
 	
 	SerialPortWrapperEventListener listener;
 	
+	public SerialPortWrapper()
+	{
+		serPortReader=new SerialPortReader(listener);
+	}
+
 	public boolean open()
 	{
 		String[] portNames  = SerialPortList.getPortNames();
@@ -83,6 +90,54 @@ public class SerialPortWrapper
 		}
 	}
 	
+	/*
+	 * 
+	 * write a value to the serial port and receive a value afterwards
+	 * 
+	 */
+	public int ping(int value) 
+	{
+		byte data[]={0};
+		long timeout_ms=100; 
+				
+		try 
+		{
+		    serialPort.purgePort(SerialPort.PURGE_RXCLEAR); // clear receiver buffer
+		    
+		    serPortReader.blockReceiverEvent();
+		    serialPort.writeByte((byte)value);
+		    
+		    /*
+		    try 
+		    {
+		        Thread.sleep(100);           
+		    } catch(InterruptedException ex) 
+		    {
+		        Thread.currentThread().interrupt();
+		    }
+		    */
+		    long startTime=System.currentTimeMillis();
+		    long stopTime=startTime+timeout_ms;
+		    do
+		    {
+		    	
+		    }while(serialPort.getInputBufferBytesCount()<1 && System.currentTimeMillis()<stopTime);
+		    
+			data=serialPort.readBytes();
+			serPortReader.enableReceiverEvent();
+
+
+		} catch (SerialPortException e) 
+		{
+			byte dat[]={0};
+			data=dat;
+			e.printStackTrace();
+		}
+		
+		if(data!=null)		return (int) data[0];
+		else return 0;
+	}
+	
     public void addEventListener(SerialPortWrapperEventListener listener) 
     {
     	this.listener=listener;
@@ -105,7 +160,9 @@ public class SerialPortWrapper
  
 		    int mask = SerialPort.MASK_RXCHAR;//Prepare mask
 		    serialPort.setEventsMask(mask);//Set mask
-		    serialPort.addEventListener(new SerialPortReader(listener));//Add SerialPortEventListener
+		    //serialPort.addEventListener(new SerialPortReader(listener));//Add SerialPortEventListener
+		    serPortReader.setListener(listener);
+		    serialPort.addEventListener(serPortReader);
 		    SerialPortOpenedFlag=true;
 		   
 		} catch (SerialPortException ex) 
@@ -136,6 +193,7 @@ public class SerialPortWrapper
 	{
 
 		SerialPortWrapperEventListener listener;
+		boolean ReceiverEventBlockedFlag=false;
 		
 
 		public SerialPortReader(SerialPortWrapperEventListener listener)
@@ -143,18 +201,31 @@ public class SerialPortWrapper
 			this.listener=listener;
 		}
 		
+		public void setListener(SerialPortWrapperEventListener listener)
+		{
+			this.listener=listener;
+		}
 		private void outputText(final String rx)
 		{
 			SerialPortWrapperEvent ev=new SerialPortWrapperEvent(SerialPortWrapperEvent.DATARECEIVED,rx);
 			if(listener!=null)	listener.serialEvent(ev);
 		}
 
+		public void blockReceiverEvent()
+		{
+			ReceiverEventBlockedFlag=true;
+		}
+		
+		public void enableReceiverEvent()
+		{
+			ReceiverEventBlockedFlag=false;
+		}
 
 	    public void serialEvent(SerialPortEvent event) 
 	    {
-	        if (event.isRXCHAR()) 
+	        if (event.isRXCHAR() && !ReceiverEventBlockedFlag) 
 	        {
-	          int numberOfBytes=event.getEventValue();
+	        	int numberOfBytes=event.getEventValue();
 	            if (numberOfBytes > 0) 
 	            {
 	                try 
