@@ -26,17 +26,20 @@ How to integrate JSSC into your projects:
 public class SerialPortWrapper 
 {
 	String portName = "/dev/ttyACM0";
+	int baudRate=115200;
 	
 	static SerialPort serialPort;
 	SerialPortReader serPortReader;
 	
 	boolean SerialPortOpenedFlag=false;
 
-	
 	SerialPortWrapperEventListener listener;
+	
+	ConfigurationStorage serialPortConfiguration;
 	
 	public SerialPortWrapper()
 	{
+		serialPortConfiguration=new ConfigurationStorage("SerialPort.cfg");
 		serPortReader=new SerialPortReader(listener);
 	}
 
@@ -78,6 +81,11 @@ public class SerialPortWrapper
 	public void close()
 	{
 		closeSerialConnection();
+	}
+	
+	public int getBaudRate()
+	{
+		return baudRate;
 	}
 	
 	public void write(char c)
@@ -150,11 +158,16 @@ public class SerialPortWrapper
 		{
 		  
 		    System.out.println("port open :" + serialPort.openPort());//Open port
-		    serialPort.setParams(SerialPort.BAUDRATE_115200,
+/*		    serialPort.setParams(SerialPort.BAUDRATE_115200,
 		            SerialPort.DATABITS_8,
 		            SerialPort.STOPBITS_1,
 		            SerialPort.PARITY_NONE);
-		    
+		    */
+		    serialPort.setParams(baudRate,
+		            SerialPort.DATABITS_8,
+		            SerialPort.STOPBITS_1,
+		            SerialPort.PARITY_NONE);
+    
 		    // clear rx data
 		    serialPort.purgePort(SerialPort.PURGE_RXCLEAR);
  

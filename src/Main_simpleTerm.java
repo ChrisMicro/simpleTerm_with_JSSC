@@ -1,9 +1,12 @@
+import gui_elements.CHValue;
+
 import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -45,8 +48,14 @@ public class Main_simpleTerm implements KeyListener
 		);
 
 		//************************ create window with text **********************************
+		
 		JPanel lowerPanel = new JPanel();
 		
+		//***************** experimental **************
+		CHValue val=new CHValue("Name","Hase");
+		fenster.getContentPane().add(val, "North");
+		//*********************************************
+				
 		fenster.getContentPane().add(lowerPanel, "South");
 		
 		TextBereich = new JTextArea(textDimension_y, textDimension_x);
@@ -164,6 +173,7 @@ public class Main_simpleTerm implements KeyListener
 	public void keyReleased(KeyEvent arg0) {}
 	
 	/************************** main ********************************************/
+	
 	public static void main(String[] args) 
 	{
 		new Main_simpleTerm();
