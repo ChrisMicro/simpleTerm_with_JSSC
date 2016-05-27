@@ -50,14 +50,19 @@ public class Main_simpleTerm implements KeyListener
 		//************************ create window with text **********************************
 		
 		JPanel lowerPanel = new JPanel();
+		JPanel upperPanel = new JPanel();
 		
 		//***************** experimental **************
-		CHValue val=new CHValue("Name","Hase");
-		fenster.getContentPane().add(val, "North");
+		CHValue portIndicator=new CHValue("Port","none");
+		upperPanel.add(portIndicator);
+
+		CHValue baudIndicator=new CHValue("Baud","none");
+		upperPanel.add(baudIndicator);
+
+		fenster.getContentPane().add(upperPanel, "North");
+		
 		//*********************************************
 				
-		fenster.getContentPane().add(lowerPanel, "South");
-		
 		TextBereich = new JTextArea(textDimension_y, textDimension_x);
 		TextBereich.setForeground(Color.GREEN);
 		TextBereich.setBackground(Color.BLACK);
@@ -65,6 +70,8 @@ public class Main_simpleTerm implements KeyListener
 		TextBereich.setLineWrap(true);
 		TextBereich.setWrapStyleWord(true);
 		TextBereich.setEditable(false);
+		
+		fenster.getContentPane().add(lowerPanel, "South");
 		lowerPanel.add(new JScrollPane(TextBereich));
 		
 		TextBereich.addKeyListener(this);
@@ -105,6 +112,8 @@ public class Main_simpleTerm implements KeyListener
 		
 		serial.addEventListener(new SerialCallBack(TextBereich));
 		serial.open();
+		portIndicator.setValueText(serial.getPort());
+		baudIndicator.setValueText(""+serial.getBaudrate());
 
 		/* ping echo test
 	    try 

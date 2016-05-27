@@ -42,7 +42,17 @@ public class SerialPortWrapper
 		serialPortConfiguration=new ConfigurationStorage("SerialPort.cfg");
 		serPortReader=new SerialPortReader(listener);
 	}
-
+	
+	public int getBaudrate()
+	{
+		return baudRate;
+	}
+	
+	public String getPort()
+	{
+		return portName;
+	}
+	
 	public boolean open()
 	{
 		String[] portNames  = SerialPortList.getPortNames();
