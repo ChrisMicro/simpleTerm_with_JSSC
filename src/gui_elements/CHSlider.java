@@ -1,13 +1,17 @@
 package gui_elements;
 
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -17,15 +21,24 @@ public class CHSlider extends CHObject
 	JTextField valueText;
 	int sliderValue;
 	
+	int textHeigth=20;
+	int labelWidth=80;
+	int sliderWidth=160;
+	int textFieldWidth=60;
 //	int width=300;
 //	int heigth=50;
 
 	public CHSlider(String label, int value, int min, int max)
 	{
 		super(label);
-		super.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+		width=labelWidth+sliderWidth+textFieldWidth;
+		//super.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+		super.setLayout(null);
 
-		labelText=new JLabel(label);
+		//labelText=new JLabel(label,SwingConstants.RIGHT);
+		labelText=new JLabel(label,SwingConstants.CENTER);
+		labelText.setBounds(0,5,labelWidth,textHeigth);
+		
 		super.add(labelText);
 		
 		sliderValue=value;
@@ -48,12 +61,14 @@ public class CHSlider extends CHObject
  		meinSlider.setPaintLabels(true);
  		meinSlider.setValue(value);
  		meinSlider.addChangeListener(new SliderListener());
+ 		meinSlider.setBounds(labelWidth,0,sliderWidth,heigth);
  		super.add(meinSlider);
  		
 		valueText=new JTextField(""+value);
+		valueText.setHorizontalAlignment(SwingConstants.CENTER);
+		valueText.setBounds(labelWidth+sliderWidth,0,textFieldWidth,textHeigth);
 		super.add(valueText);
 		valueText.setCaretColor(Color.WHITE);
-		valueText.setPreferredSize( new Dimension( 100, 20 ) );
 			
 		super.setBounds(next_xPosition,next_yPosition,width,heigth);
 		next_yPosition+=heigth;
